@@ -3,18 +3,25 @@
 import java.awt.Color;
 
 public class Car extends Vehicle { 
-	
+
+	public static final int MOTORBIKE_UNITS = 3;
+
 	//Car Properties
 	private int doors;
 	private Color color;
-	
+	private final String vehicleType = "Car";
+
 	//Constructor
 	public Car(String idPlate, String brand, String model, DateTime entryTime, int doors, Color color) {
 		super(idPlate, brand, model, entryTime);
 		this.doors=doors;
 		this.color=color;
 	}
-	
+
+	public int getParkingUnits() {
+		return MOTORBIKE_UNITS;
+	}
+
 	public int getDoors() {
 		return doors;
 	}
@@ -27,6 +34,10 @@ public class Car extends Vehicle {
 	}
 	public void setColor(Color color) {
 		this.color=color;
+	}
+
+	public String getVehicleType() {
+		return this.vehicleType;
 	}
 
 	@Override

@@ -7,49 +7,50 @@ public class ConsoleApplication {
 	private static BambaCarParkManager bambaCarParkManager =  BambaCarParkManager.getInstance();
 
 	public static void main(String[] args) {
-		
+
 		//getting the choice from the input
-		while(true) {
-		System.out.println("Select your Choice : ");
-		System.out.println("1. Add Vehicle");
-		System.out.println("2. Delete Vehicle");
-		System.out.println("3. Print the current available vehicle");
-		System.out.println("4. Print statistics");
-		System.out.println("5. Vehicles parked in a day.");
-		System.out.println("6. Charge for the parking");
-		System.out.println("7. Percentage of vehicles");
-		System.out.println("8. Hit '0' to Exit");
-		System.out.println(">>>>");
-		Scanner sc = new Scanner(System.in);
-		int choice = sc.nextInt();
-		switch (choice) {
-		case 1:
-			addVehicle();
-			break;
-		case 2:
-			deleteVehicle();
-			break;
-		case 3:
-			printVehicle();
-			break;
-		case 4:
-			printStatistics();
-			break;
-		case 5:
-			parkedByDay();
-			break;
-		case 6:
-			calCharge();
-			break;
-		case 7:
-			vehiclePercentage();
-			break;
-		case 0:
-			System.exit(0);
-			break;
-		default:
-			System.out.println("Invalid choice. Please enter a valid choice");
-		}
+		while (true) {
+			System.out.println("Select your Choice : ");
+			System.out.println("1. Add Vehicle");
+			System.out.println("2. Delete Vehicle");
+			System.out.println("3. Print the current available vehicle");
+			System.out.println("4. Print statistics");
+			System.out.println("5. Vehicles parked in a day.");
+			System.out.println("6. Charge for the parking");
+			System.out.println("7. Percentage of vehicles");
+			System.out.println("8. Hit '0' to Exit");
+			System.out.println(">>>>");
+			Scanner sc = new Scanner(System.in);
+			int choice = sc.nextInt();
+
+			switch (choice) {
+				case 1:
+					addVehicle();
+					break;
+				case 2:
+					deleteVehicle();
+					break;
+				case 3:
+					printVehicle();
+					break;
+				case 4:
+					printStatistics();
+					break;
+				case 5:
+					parkedByDay();
+					break;
+				case 6:
+					calCharge();
+					break;
+				case 7:
+					vehiclePercentage();
+					break;
+				case 0:
+					System.exit(0);
+					break;
+				default:
+					System.out.println("Invalid choice. Please enter a valid choice");
+			}
 		}
 	}
 

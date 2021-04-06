@@ -48,8 +48,7 @@ public abstract class Vehicle extends Object implements Comparable<Vehicle> {
 	public void setEntryDate(DateTime entryTime) {
 		this.entryTime = entryTime;
 	}
-	
-	
-	
 
+	public abstract int getParkingUnits();
+	public abstract String getVehicleType();
 }

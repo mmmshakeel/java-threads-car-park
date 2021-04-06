@@ -3,16 +3,31 @@
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
 
-public class BambaCarParkManager implements CarParkManager{
+public class BambaCarParkManager implements CarParkManager {
 	
 	private ArrayList<Vehicle> listOfVehicle = new ArrayList<Vehicle>();
 	private static BambaCarParkManager instance = null;
-	private int availableSlots = 20; 
+
+	private int groundFloorAvailableSlots = CarParkManager.MAX_GROUNG_FLOOR;
+	private int firstFloorAvailableSlots = CarParkManager.MAX_FIRST_FLOOR;
+	private int secondFloorAvailableSlots = CarParkManager.MAX_SECOND_FLOOR;
+
+	private Queue<Vehicle> groundFloorParkedVehicles = new LinkedList<Vehicle>();
+	private Queue<Vehicle> firstFloorParkedVehicles = new LinkedList<Vehicle>();
+	private Queue<Vehicle> secondFloorParkedVehicles = new LinkedList<Vehicle>();
+
+	// create 3 FIFO queues to handle vehicle preferences
+	private Queue<Vehicle> carQueue = new LinkedList<Vehicle>();
+	private Queue<Vehicle> vanQueue = new LinkedList<Vehicle>();
+	private Queue<Vehicle> motorbikeQueue = new LinkedList<Vehicle>();
+
 	private double chargePerHour = 300;
 	private double addCharge = 100;
 	private double maxCharge = 3000;
-	private int addFromthisHour =3;
+	private int addFromthisHour = 3;
 	
 	//private constructor
 	private BambaCarParkManager() {
@@ -40,30 +55,218 @@ public class BambaCarParkManager implements CarParkManager{
 				return;
 			}
 		}
-		// Check whether there are sufficient space available for any vehicle to park
-		if(listOfVehicle.size()<20) {	
-			if(obj instanceof Van ) {
-				if(listOfVehicle.size()<19) {
-					listOfVehicle.add(obj);
-					availableSlots -=2;
-					System.out.println("Available slots : "+availableSlots);
-					System.out.println("\n");
-				}else {
-					System.out.println("Sorry..There are no slots available to park your Van."+"\n");
-				}
-			}
-			if(obj instanceof MotorBike || obj instanceof Car) {
-				listOfVehicle.add(obj);
-				availableSlots --;
-				System.out.println("Available slots : "+availableSlots);
-			}
-		}else {
-			System.out.println("Sorry...There are not space availble for parking...");
+
+
+		// try to find a floor based on the vehicle type
+		if(obj instanceof Van ) {
+			vanQueue.offer(obj);
+			listOfVehicle.add(obj);
+//				availableSlots -=2;
+//				System.out.println("Available slots : "+availableSlots);
+//				System.out.println("\n");
+
+		}
+
+		if(obj instanceof Car) {
+			carQueue.offer(obj);
+			listOfVehicle.add(obj);
+//			availableSlots --;
+//			System.out.println("Available slots : "+availableSlots);
+		}
+
+		if(obj instanceof MotorBike) {
+			motorbikeQueue.offer(obj);
+			listOfVehicle.add(obj);
 		}
 	}
-  
+
+	/**
+	 * Park a vehicle in a slot
+	 *
+	 * @param obj
+	 */
+	public synchronized void parkVehicle(Vehicle obj) {
+		boolean jobDone = false;
+
+		while ((groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots) < 1) {
+			// check for any available slot, if not wait 5 seconds
+			try {
+				wait(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		// van and car is allowed in all 3 floors
+		if (obj instanceof Car || obj instanceof Van) {
+			// first admit into ground floor then check other floors
+			if (checkSlotAvailableForVehicleType(obj, groundFloorAvailableSlots)) {
+				groundFloorAvailableSlots -= obj.getParkingUnits();
+				groundFloorParkedVehicles.offer(obj);
+				System.out.println(Thread.currentThread().getName());
+				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at ground floor");
+				jobDone = true;
+
+			} else if (checkSlotAvailableForVehicleType(obj, firstFloorAvailableSlots)) {
+				firstFloorAvailableSlots -= obj.getParkingUnits();
+				firstFloorParkedVehicles.offer(obj);
+				System.out.println(Thread.currentThread().getName());
+				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at first floor");
+				jobDone = true;
+
+			} else if (checkSlotAvailableForVehicleType(obj, secondFloorAvailableSlots)) {
+				secondFloorAvailableSlots -= obj.getParkingUnits();
+				secondFloorParkedVehicles.offer(obj);
+				System.out.println(Thread.currentThread().getName());
+				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at second floor");
+				jobDone = true;
+
+			}
+		}
+
+		// bike is allowed only on ground and first floor
+		if (obj instanceof MotorBike) {
+			if (checkSlotAvailableForVehicleType(obj, groundFloorAvailableSlots)) {
+				groundFloorAvailableSlots -= obj.getParkingUnits();
+				groundFloorParkedVehicles.offer(obj);
+				System.out.println(Thread.currentThread().getName());
+				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at ground floor");
+				jobDone = true;
+
+			} else if (checkSlotAvailableForVehicleType(obj, firstFloorAvailableSlots)) {
+				firstFloorAvailableSlots -= obj.getParkingUnits();
+				firstFloorParkedVehicles.offer(obj);
+				System.out.println(Thread.currentThread().getName());
+				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at first floor");
+				jobDone = true;
+
+			}
+		}
+
+		if (jobDone) {
+			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3);
+			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3);
+			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3);
+			System.out.println("----------");
+			System.out.println("");
+		}
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		notifyAll();
+
+	}
+
+	/**
+	 * Exit from parking
+	 *
+	 * @param floor
+	 */
+	public synchronized void exitVehicle(int floor) {
+		boolean jobDone = false;
+		while ((groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots) == (MAX_GROUNG_FLOOR + MAX_FIRST_FLOOR + MAX_SECOND_FLOOR)) {
+			try {
+				// no vehicles parked on any floors, no vehicle is available for exit
+				wait(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		// exit from ground floor
+		if (floor == GROUND_FLOOR_LEVEL && groundFloorAvailableSlots < MAX_GROUNG_FLOOR) {
+			Vehicle obj = groundFloorParkedVehicles.poll();
+			groundFloorAvailableSlots += obj.getParkingUnits();
+
+			System.out.println(Thread.currentThread().getName());
+			System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit ground floor");
+			jobDone = true;
+		}
+
+		// exit from first floor
+		if (floor == FIRST_FLOOR_LEVEL && firstFloorAvailableSlots < MAX_FIRST_FLOOR) {
+			Vehicle obj = firstFloorParkedVehicles.poll();
+			firstFloorAvailableSlots += obj.getParkingUnits();
+
+			System.out.println(Thread.currentThread().getName());
+			System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit first floor");
+			jobDone = true;
+		}
+
+		// exit from second floor
+		if (floor == SECOND_FLOOR_LEVEL && secondFloorAvailableSlots < MAX_SECOND_FLOOR) {
+			Vehicle obj = secondFloorParkedVehicles.poll();
+			secondFloorAvailableSlots += obj.getParkingUnits();
+
+			System.out.println(Thread.currentThread().getName());
+			System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit second floor");
+			jobDone = true;
+		}
+
+
+		if (jobDone) {
+			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3);
+			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3);
+			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3);
+			System.out.println("----------");
+			System.out.println("");
+		}
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		notifyAll();
+	}
+
+	public Queue<Vehicle> getCarQueue() {
+		return carQueue;
+	}
+
+	public Queue<Vehicle> getVanQueue() {
+		return vanQueue;
+	}
+
+	public Queue<Vehicle> getMotorbikeQueue() {
+		return motorbikeQueue;
+	}
+
+	/**
+	 * One parking slot equals to 3 motorbike slots (3 motor bikes can be parked in one parking slot)
+	 * Therefore, Van needs 2 parking slots = 6 motorbike slots unit
+	 * Car needs one parking slot = 3 motorbike slots unit
+	 *
+	 * @param vehicle
+	 * @param slots
+	 * @return
+	 */
+	private boolean checkSlotAvailableForVehicleType(Vehicle vehicle, int slots) {
+
+		if (vehicle instanceof Van) {
+			return slots >= 6; // one slot equals to 3 motorbike slots and the van needs 2 main slots (6 motorbike slots)
+		}
+
+		if (vehicle instanceof Car) {
+			return slots >= 3;
+		}
+
+		if (vehicle instanceof MotorBike) {
+			return slots > 0;
+		}
+
+		return false;
+	}
+
 	@Override
 	public void deleteVehicle(String IdPlate) {
+		int availableSlots = 70;
+
 		for(Vehicle item: listOfVehicle) {
 			//Checking for a particular vehicle with its' plate ID
 			if(item.getIdPlate().equals(IdPlate)) {
