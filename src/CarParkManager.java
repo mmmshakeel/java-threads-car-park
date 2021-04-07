@@ -6,7 +6,7 @@ import java.util.Queue;
 public interface CarParkManager {
 
 	// convert the car park slots to motorbike slots as the minimum unit for easy calculation
-	public static final int MAX_GROUNG_FLOOR = 80 * 3; //Number of slots available in the Ground floor
+	public static final int MAX_GROUND_FLOOR = 80 * 3; //Number of slots available in the Ground floor
 	public static final int MAX_FIRST_FLOOR = 60 * 3; //Number of slots available in the first floor
 	public static final int MAX_SECOND_FLOOR = 70 * 3; //Number of slots available in the second floor
 
@@ -24,6 +24,7 @@ public interface CarParkManager {
 	public BigDecimal calculateChargers(String plateID, DateTime currentTime);
 
 	public void exitVehicle(int floor);
-	public void parkVehicle(Vehicle obj);
+	public void parkVehicle(Vehicle obj, int floor);
+	public Queue<Vehicle> getParkedVehicles(int floor);
 
 }
