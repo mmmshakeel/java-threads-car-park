@@ -24,6 +24,8 @@ public class BambaCarParkManager implements CarParkManager {
 	private Queue<Vehicle> vanQueue = new LinkedList<Vehicle>();
 	private Queue<Vehicle> motorbikeQueue = new LinkedList<Vehicle>();
 
+	private int secondFloorLift = 12;
+
 	private double chargePerHour = 300;
 	private double addCharge = 100;
 	private double maxCharge = 3000;
@@ -88,10 +90,10 @@ public class BambaCarParkManager implements CarParkManager {
 	public synchronized void parkVehicle(Vehicle obj) {
 		boolean jobDone = false;
 
-		while ((groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots) < 1) {
-			// check for any available slot, if not wait 5 seconds
+		while ((groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots) == 0) {
+			// check for any available slot, if not wait
 			try {
-				wait(5000);
+				wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -120,7 +122,6 @@ public class BambaCarParkManager implements CarParkManager {
 				System.out.println(Thread.currentThread().getName());
 				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at second floor");
 				jobDone = true;
-
 			}
 		}
 
@@ -144,15 +145,15 @@ public class BambaCarParkManager implements CarParkManager {
 		}
 
 		if (jobDone) {
-			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3);
-			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3);
-			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3);
+			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3.0);
+			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3.0);
+			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3.0);
 			System.out.println("----------");
 			System.out.println("");
 		}
 
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(200);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -170,8 +171,9 @@ public class BambaCarParkManager implements CarParkManager {
 		boolean jobDone = false;
 		while ((groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots) == (MAX_GROUNG_FLOOR + MAX_FIRST_FLOOR + MAX_SECOND_FLOOR)) {
 			try {
+				System.out.println("Waiting - " + (groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots));
 				// no vehicles parked on any floors, no vehicle is available for exit
-				wait(5000);
+				wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -209,15 +211,15 @@ public class BambaCarParkManager implements CarParkManager {
 
 
 		if (jobDone) {
-			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3);
-			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3);
-			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3);
+			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3.0);
+			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3.0);
+			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3.0);
 			System.out.println("----------");
 			System.out.println("");
 		}
 
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(200);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

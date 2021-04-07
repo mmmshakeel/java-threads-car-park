@@ -54,11 +54,15 @@ public class CarParkScene1 {
         threads[6] = new Thread(gateIn, "Ground South gate entry");
         threads[7] = new Thread(gateOut, "Ground South gate exit");
 
+        // first floor threads
         threads[8] = new Thread(gateIn, "First floor West gate entry 1");
         threads[9] = new Thread(gateIn, "First floor West gate entry 2");
 
         threads[10] = new Thread(gateOut, "First floor East gate exit 1");
         threads[11] = new Thread(gateOut, "First floor East gate exit 2");
+
+        // second floor threads
+
 
         // start all threads
         for (Thread thread: threads) {
