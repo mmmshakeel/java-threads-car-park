@@ -1,17 +1,22 @@
-import kotlin.reflect.jvm.internal.impl.types.checker.SimpleClassicTypeSystemContext;
-
 import java.awt.*;
-import java.net.SocketOption;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class CarParkScene1 {
+public class CarParkScene2 {
 
     private static BambaCarParkManager bambaCarParkManager =  BambaCarParkManager.getInstance();
 
     public static void main(String[] args) {
+
+        DateTime dateTime = new DateTime(2021, 4, 6, 20, 10, 20);
+
+        // set ground floor parking full for this example.
+        bambaCarParkManager.setGroundFloorAvailableSlots(0);
+        Queue<Vehicle> gfVehicleQueue = new LinkedList<Vehicle>();
+        for (int i = 0; i < CarParkManager.MAX_GROUND_FLOOR; i += 3) {
+            gfVehicleQueue.offer(new Car("KM-988"+i, "Toyota", "Premio", dateTime, 4, Color.BLUE));
+        }
+        bambaCarParkManager.setGroundFloorParkedVehicles(gfVehicleQueue);
 
         // All parking slots are empty when start on this example.
         // create some vehicles to park
@@ -19,7 +24,6 @@ public class CarParkScene1 {
         Queue<Vehicle> vanQueue = new LinkedList<Vehicle>();
         Queue<Vehicle> motorbikeQueue = new LinkedList<Vehicle>();
 
-        DateTime dateTime = new DateTime(2021, 4, 6, 20, 10, 20);
         carQueue.offer(new Car("KX-5213", "Toyota", "Premio", dateTime, 4, Color.BLACK));
         carQueue.offer(new Car("CAS-1234", "Toyota", "Prado", dateTime, 4, Color.WHITE));
         carQueue.offer(new Car("BAT-2234", "Toyota", "Prius", dateTime, 4, Color.GRAY));
@@ -31,7 +35,7 @@ public class CarParkScene1 {
 
         // create runnables for ground floor gates
         Runnable groundGateIn = new GateIn(bambaCarParkManager, CarParkManager.GROUND_FLOOR_LEVEL, carQueue, vanQueue, motorbikeQueue);
-        Runnable groundGateOut = new GateOut(bambaCarParkManager, CarParkManager.GROUND_FLOOR_LEVEL, (carQueue.size() + vanQueue.size() + motorbikeQueue.size()));
+        Runnable groundGateOut = new GateOut(bambaCarParkManager, CarParkManager.GROUND_FLOOR_LEVEL, (gfVehicleQueue.size() + carQueue.size() + vanQueue.size() + motorbikeQueue.size()));
 
         // create a thread group for ground floor
         // ThreadGroup groundFloorGroup = new ThreadGroup("Ground Floor");

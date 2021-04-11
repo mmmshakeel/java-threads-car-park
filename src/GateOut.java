@@ -2,22 +2,20 @@ import java.util.Queue;
 
 public class GateOut implements Runnable {
 
-    private CarParkManager carParkManager;
-    private int floor;
+    private final CarParkManager carParkManager;
+    private final int floor;
+    private final int noOfVehicles;
 
-    public GateOut(CarParkManager carParkManager, int floor) {
+    public GateOut(CarParkManager carParkManager, int floor, int noOfVehicles) {
         this.carParkManager = carParkManager;
         this.floor = floor;
+        this.noOfVehicles = noOfVehicles;
     }
 
     @Override
     public void run() {
-        /*for (int i=0; i<2; i++) {
-            this.carParkManager.exitVehicle(floor);
-        }*/
-        Queue<Vehicle> vehicles = this.carParkManager.getParkedVehicles(floor);
 
-        for (int i=0; i<vehicles.size(); i++) {
+        for (int i = 0; i < noOfVehicles; i++) {
             this.carParkManager.exitVehicle(floor);
         }
 

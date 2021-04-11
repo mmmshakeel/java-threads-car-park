@@ -45,34 +45,31 @@ public class BambaCarParkManager implements CarParkManager {
 	
 	@Override
 	public void addVehicle(Vehicle obj) {
-		int availableSlots = 20;
-		//check whether the vehicle is already parked or not
-		for(Vehicle item : listOfVehicle) {
-			if(item.equals(obj)) {
-				System.out.println("This vehicle is already parked.");
-				return;
-			}
-		}
+		listOfVehicle.add(obj);
+	}
 
+	public void setGroundFloorAvailableSlots(int groundFloorAvailableSlots) {
+		this.groundFloorAvailableSlots = groundFloorAvailableSlots;
+	}
 
-		// try to find a floor based on the vehicle type
-		if(obj instanceof Van ) {
-			listOfVehicle.add(obj);
-				availableSlots -=2;
-				System.out.println("Available slots : "+availableSlots);
-				System.out.println("\n");
+	public void setFirstFloorAvailableSlots(int firstFloorAvailableSlots) {
+		this.firstFloorAvailableSlots = firstFloorAvailableSlots;
+	}
 
-		}
+	public void setSecondFloorAvailableSlots(int secondFloorAvailableSlots) {
+		this.secondFloorAvailableSlots = secondFloorAvailableSlots;
+	}
 
-		if(obj instanceof Car) {
-			listOfVehicle.add(obj);
-			availableSlots --;
-			System.out.println("Available slots : "+availableSlots);
-		}
+	public void setGroundFloorParkedVehicles(Queue<Vehicle> groundFloorParkedVehicles) {
+		this.groundFloorParkedVehicles = groundFloorParkedVehicles;
+	}
 
-		if(obj instanceof MotorBike) {
-			listOfVehicle.add(obj);
-		}
+	public void setFirstFloorParkedVehicles(Queue<Vehicle> firstFloorParkedVehicles) {
+		this.firstFloorParkedVehicles = firstFloorParkedVehicles;
+	}
+
+	public void setSecondFloorParkedVehicles(Queue<Vehicle> secondFloorParkedVehicles) {
+		this.secondFloorParkedVehicles = secondFloorParkedVehicles;
 	}
 
 	/**
@@ -83,12 +80,38 @@ public class BambaCarParkManager implements CarParkManager {
 	public synchronized void parkVehicle(Vehicle obj, int floor) {
 		boolean jobDone = false;
 
+		// if the accessing thread is from the second floor, check if the lower floors has parking lots free
+		// if available block this floor thread and go to wait until the lower floors fill first
+		// in this case we check if the lifts are available too
+		while (floor == SECOND_FLOOR_LEVEL &&
+				(groundFloorAvailableSlots >= obj.getParkingUnits() || firstFloorAvailableSlots >= obj.getParkingUnits() || secondFloorLift == 0)) {
+			try {
+				System.out.println("wait at Entry: floor-"+floor+" gfa-"+groundFloorAvailableSlots/3.0+" ffa-"+firstFloorAvailableSlots/3.0+" sfa-"+secondFloorAvailableSlots/3.0);
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		// if the accessing thread is from the first floor, check if the ground floor has parking lots free
+		// if available block this floor thread and go to wait until the first floor fill first
+		while (floor == FIRST_FLOOR_LEVEL && (groundFloorAvailableSlots >= obj.getParkingUnits())) {
+			try {
+				System.out.println("wait at Entry: floor-"+floor+" gfa-"+groundFloorAvailableSlots/3.0+" ffa-"+firstFloorAvailableSlots/3.0+" sfa-"+secondFloorAvailableSlots/3.0);
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+		// check if all floors are filled already.
+		// if there is no parking slots available to park at any floor, wait until a vehicle exit
 		while ((floor == GROUND_FLOOR_LEVEL && groundFloorAvailableSlots == 0)
 			|| (floor == FIRST_FLOOR_LEVEL && firstFloorAvailableSlots == 0)
 			|| (floor == SECOND_FLOOR_LEVEL && secondFloorAvailableSlots == 0)) {
 			// check for any available slot, if not wait
 			try {
-				System.out.println("wait - 2 floor-"+floor+" gfa-"+groundFloorAvailableSlots/3.0+" ffa-"+firstFloorAvailableSlots/3.0+" sfa"+secondFloorAvailableSlots/3.0);
+				System.out.println("wait at Entry: floor-"+floor+" gfa-"+groundFloorAvailableSlots/3.0+" ffa-"+firstFloorAvailableSlots/3.0+" sfa-"+secondFloorAvailableSlots/3.0);
 				wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -102,24 +125,23 @@ public class BambaCarParkManager implements CarParkManager {
 				groundFloorAvailableSlots -= obj.getParkingUnits();
 				groundFloorParkedVehicles.offer(obj);
 
-				System.out.println(Thread.currentThread().getName());
-				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at ground floor");
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() +" with ID plate: "+ obj.getIdPlate() +" Parked at ground floor");
 				jobDone = true;
 
 			} else if (firstFloorAvailableSlots >= obj.getParkingUnits()) {
 				firstFloorAvailableSlots -= obj.getParkingUnits();
 				firstFloorParkedVehicles.offer(obj);
 
-				System.out.println(Thread.currentThread().getName());
-				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at first floor");
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at first floor");
 				jobDone = true;
 
 			} else if (secondFloorAvailableSlots >= obj.getParkingUnits()) {
+				secondFloorLift--;
 				secondFloorAvailableSlots -= obj.getParkingUnits();
 				secondFloorParkedVehicles.offer(obj);
 
-				System.out.println(Thread.currentThread().getName());
-				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at second floor");
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at second floor");
+				secondFloorLift++;
 				jobDone = true;
 			}
 		}
@@ -130,33 +152,26 @@ public class BambaCarParkManager implements CarParkManager {
 				groundFloorAvailableSlots -= obj.getParkingUnits();
 				groundFloorParkedVehicles.offer(obj);
 
-				System.out.println(Thread.currentThread().getName());
-				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at ground floor");
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at ground floor");
 				jobDone = true;
 
 			} else if (firstFloorAvailableSlots >= obj.getParkingUnits()) {
 				firstFloorAvailableSlots -= obj.getParkingUnits();
 				firstFloorParkedVehicles.offer(obj);
 
-				System.out.println(Thread.currentThread().getName());
-				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at first floor");
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Parked at first floor");
 				jobDone = true;
 
 			}
 		}
 
 		if (jobDone) {
+			this.addVehicle(obj);
 			System.out.println("Ground floor available slots: " + groundFloorAvailableSlots/3.0);
 			System.out.println("First floor available slots: " + firstFloorAvailableSlots/3.0);
 			System.out.println("Second floor available slots: " + secondFloorAvailableSlots/3.0);
 			System.out.println("----------");
 			System.out.println("");
-		}
-
-		try {
-			Thread.sleep(200);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 
 		notifyAll();
@@ -170,21 +185,11 @@ public class BambaCarParkManager implements CarParkManager {
 	 */
 	public synchronized void exitVehicle(int floor) {
 		boolean jobDone = false;
-		/*while ((floor == GROUND_FLOOR_LEVEL && groundFloorAvailableSlots == MAX_GROUND_FLOOR)
-			|| (floor == FIRST_FLOOR_LEVEL && firstFloorAvailableSlots == MAX_FIRST_FLOOR)
-			|| (floor == SECOND_FLOOR_LEVEL && secondFloorAvailableSlots == MAX_SECOND_FLOOR)) {
-			try {
-				System.out.println("wait - 3 floor-"+floor+" gfa-"+groundFloorAvailableSlots/3.0+" ffa-"+firstFloorAvailableSlots/3.0+" sfa"+secondFloorAvailableSlots/3.0);
-				// no vehicles parked on any floors, no vehicle is available for exit
-				wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}*/
 
 		while ((groundFloorAvailableSlots + firstFloorAvailableSlots + secondFloorAvailableSlots) == (MAX_GROUND_FLOOR + MAX_FIRST_FLOOR + MAX_SECOND_FLOOR)) {
 			try {
 				// no vehicles parked on any floors, no vehicle is available for exit
+				System.out.println("wait at Exit: floor-"+floor+" gfa-"+groundFloorAvailableSlots/3.0+" ffa-"+firstFloorAvailableSlots/3.0+" sfa"+secondFloorAvailableSlots/3.0);
 				wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -197,31 +202,36 @@ public class BambaCarParkManager implements CarParkManager {
 				Vehicle obj = groundFloorParkedVehicles.poll();
 				groundFloorAvailableSlots += obj.getParkingUnits();
 
-				System.out.println(Thread.currentThread().getName());
-				System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit ground floor");
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit ground floor");
+				this.deleteVehicle(obj.getIdPlate());
 				jobDone = true;
 			}
-
 		}
 
 		// exit from first floor
 		if (floor == FIRST_FLOOR_LEVEL && firstFloorAvailableSlots < MAX_FIRST_FLOOR) {
-			Vehicle obj = firstFloorParkedVehicles.poll();
-			firstFloorAvailableSlots += obj.getParkingUnits();
+			while (firstFloorAvailableSlots < MAX_FIRST_FLOOR) {
+				Vehicle obj = firstFloorParkedVehicles.poll();
+				firstFloorAvailableSlots += obj.getParkingUnits();
 
-			System.out.println(Thread.currentThread().getName());
-			System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit first floor");
-			jobDone = true;
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit first floor");
+				this.deleteVehicle(obj.getIdPlate());
+				jobDone = true;
+			}
 		}
 
 		// exit from second floor
 		if (floor == SECOND_FLOOR_LEVEL && secondFloorAvailableSlots < MAX_SECOND_FLOOR) {
-			Vehicle obj = secondFloorParkedVehicles.poll();
-			secondFloorAvailableSlots += obj.getParkingUnits();
+			while (secondFloorAvailableSlots < MAX_SECOND_FLOOR) {
+				secondFloorLift--;
+				Vehicle obj = secondFloorParkedVehicles.poll();
+				secondFloorAvailableSlots += obj.getParkingUnits();
 
-			System.out.println(Thread.currentThread().getName());
-			System.out.println(obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit second floor");
-			jobDone = true;
+				System.out.println("Gate: "+Thread.currentThread().getName()+ " - " +obj.getVehicleType() + " with ID plate: "+ obj.getIdPlate() +" Exit second floor");
+				this.deleteVehicle(obj.getIdPlate());
+				secondFloorLift++;
+				jobDone = true;
+			}
 		}
 
 
@@ -233,44 +243,14 @@ public class BambaCarParkManager implements CarParkManager {
 			System.out.println("");
 		}
 
-		try {
-			Thread.sleep(200);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
 		notifyAll();
-	}
-
-	public synchronized Queue<Vehicle> getParkedVehicles(int floor) {
-		return switch (floor) {
-			case GROUND_FLOOR_LEVEL -> this.groundFloorParkedVehicles;
-			case FIRST_FLOOR_LEVEL -> this.firstFloorParkedVehicles;
-			default -> this.secondFloorParkedVehicles;
-		};
 	}
 
 	@Override
 	public void deleteVehicle(String IdPlate) {
-		int availableSlots = 70;
 
-		for(Vehicle item: listOfVehicle) {
-			//Checking for a particular vehicle with its' plate ID
-			if(item.getIdPlate().equals(IdPlate)) {
-				System.out.println("Vehicle Found.");
-				if(item instanceof Van) {
-					availableSlots+=2;
-					System.out.println("Space cleared after deleting a Van.\nAvailable Slots : "
-							+availableSlots);
-						}else{
-							availableSlots++;
-							System.out.println("Space cleared after deleting a vehicle.\nAvailable Slots : "
-							+availableSlots);
-						}
-			}else {
-				System.out.println("Vehicle not found.");
-			}
-		}
+		//Checking for a particular vehicle with its' plate ID
+		listOfVehicle.removeIf(item -> item.getIdPlate().equals(IdPlate));
 	}
 			
 	

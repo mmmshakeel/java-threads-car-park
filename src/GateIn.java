@@ -20,28 +20,28 @@ public class GateIn implements Runnable {
     public void run() {
 
         // first preference to cars
-        if (carQueue.size() > 0) {
+//        if (carQueue.size() > 0) {
             for (int i=0; i<carQueue.size(); i++) {
                 // let all the cars in any gate first
                 this.carParkManager.parkVehicle(carQueue.poll(), floor);
             }
-        }
+//        }
 
         // then give the preference to vans
-        if (vanQueue.size() > 0) {
+//        if (vanQueue.size() > 0) {
             for (int i=0; i<vanQueue.size(); i++) {
                 // let all the cars in any gate first
                 this.carParkManager.parkVehicle(vanQueue.poll(), floor);
             }
-        }
+//        }
 
         // lowest preference to motorbikes
-        if (motorbikeQueue.size() > 0) {
+//        if (motorbikeQueue.size() > 0) {
             for (int i=0; i<motorbikeQueue.size(); i++) {
                 // let all the cars in any gate first
                 this.carParkManager.parkVehicle(motorbikeQueue.poll(), floor);
             }
-        }
+//        }
 
     }
 }

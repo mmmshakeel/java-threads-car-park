@@ -25,6 +25,5 @@ public interface CarParkManager {
 
 	public void exitVehicle(int floor);
 	public void parkVehicle(Vehicle obj, int floor);
-	public Queue<Vehicle> getParkedVehicles(int floor);
 
 }
