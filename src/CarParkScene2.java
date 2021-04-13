@@ -35,11 +35,11 @@ public class CarParkScene2 {
 
         // create runnables for ground floor gates
         Runnable groundGateIn = new GateIn(bambaCarParkManager, CarParkManager.GROUND_FLOOR_LEVEL, carQueue, vanQueue, motorbikeQueue);
-        Runnable groundGateOut = new GateOut(bambaCarParkManager, CarParkManager.GROUND_FLOOR_LEVEL, (gfVehicleQueue.size() + carQueue.size() + vanQueue.size() + motorbikeQueue.size()));
+        Runnable groundGateOut = new GateOut(bambaCarParkManager, CarParkManager.GROUND_FLOOR_LEVEL, (gfVehicleQueue.size() + carQueue.size() + vanQueue.size() + motorbikeQueue.size() + 1000));
 
         // create a thread group for ground floor
         // ThreadGroup groundFloorGroup = new ThreadGroup("Ground Floor");
-        Thread[] threads = new Thread[26];
+        Thread[] threads = new Thread[45];
 
         // ground floor northern gates with highest priority
         Thread northernGateIn1 = new Thread(groundGateIn, "Ground Northern gate entry 1");
@@ -75,7 +75,7 @@ public class CarParkScene2 {
 
         // create runnables for ground floor gates
         Runnable firstGateIn = new GateIn(bambaCarParkManager, CarParkManager.FIRST_FLOOR_LEVEL, carQueue2, vanQueue2, motorbikeQueue2);
-        Runnable firstGateOut = new GateOut(bambaCarParkManager, CarParkManager.FIRST_FLOOR_LEVEL, (carQueue2.size()) + vanQueue2.size() + motorbikeQueue2.size());
+        Runnable firstGateOut = new GateOut(bambaCarParkManager, CarParkManager.FIRST_FLOOR_LEVEL, (carQueue2.size() + vanQueue2.size() + motorbikeQueue2.size() + 1000));
 
         // first floor threads
         threads[8] = new Thread(firstGateIn, "First floor West gate entry 1");
@@ -91,12 +91,16 @@ public class CarParkScene2 {
         Queue<Vehicle> motorbikeQueue3 = new LinkedList<Vehicle>();
         // create runnables for ground floor gates
         Runnable liftIn = new GateIn(bambaCarParkManager, CarParkManager.SECOND_FLOOR_LEVEL, carQueue3, vanQueue3, motorbikeQueue3);
-        Runnable liftOut = new GateOut(bambaCarParkManager, CarParkManager.SECOND_FLOOR_LEVEL, (carQueue3.size()) + vanQueue3.size() + motorbikeQueue3.size());
+        Runnable liftOut = new GateOut(bambaCarParkManager, CarParkManager.SECOND_FLOOR_LEVEL, (carQueue3.size() + vanQueue3.size() + motorbikeQueue3.size() + 1000));
 
+        // create 12 threads for second floor
         // create 12 threads for second floor
         for (int i = 12; i < 24; i++) {
             threads[i] = new Thread(liftIn, "Second floor lift " + (i-11) + " entry");
-            threads[i] = new Thread(liftOut, "Second floor lift " + (i-11) + " exit");
+        }
+
+        for (int i = 24; i < 36; i++) {
+            threads[i] = new Thread(liftOut, "Second floor lift " + (i-23) + " exit");
         }
 
         // start all threads
